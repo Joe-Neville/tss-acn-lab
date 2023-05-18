@@ -32,3 +32,22 @@ There is also a shared ClearPass instance and a Windows 2019 server running Acti
 * As such, we are going to deeper into the network configuration, to really delve into the device setup and EVPN tables.
 * Now, this is advanced networking, so don't worry if some things do not click in this short lab. An EVPN table is something of a beast when first experienced.
 * We do hope you enjoy the lab, and if you need any assistance, just ask!
+
+## Lab
+### Scenario
+Congratulations - your hardwork, dedication and general grindset mentality has earned you the prized 'employee of the month' award at TSSlab Corp. 
+In recognition of your success, you've been asked to head up the all-important new campus network build using Aruba's new Enterprise Architecture platform, NetConductor (we'll call it ACN from now on.)
+Your task is to deploy a new network fabric on a AOS-CX switching spine-and-leaf underlay.
+The aim of the network build is to support both the Production and Development networks, keeping them separate across the shared fabric core.
+In addition, TSSlab Corp has had some outages recently. Cause: The ACLs across the network have never been tidied up and even small changes are creating big issues. The C-suite have noticed and are asking questions (like 'can we replace the networking team with chatGPT?')
+You and your network team are going solve this headache and have decided to use this greenfield site as your chance to improve things, to move beyond the ageing ACL / VLAN security model, and deploy dynamic role-based segmentation!
+The new build is the perfect opportunity because, while the site is up for Employees, who must communicate, there are a number of contractors on-site, who should be kept apart from the Employee data. Rather than carve up the network in new VLANs for the temporary contractors, you plan to use a Contractor role and deny traffic to your Employee users, all enabled dynamically at user log in.
+
+To get sign-off on this duty, you need to complete the following:
+* Build the EVPN-VXLAN fabric.
+* Deploy two VRFs - 'Prod' and 'Dev'
+* Configure and Deploy the Employee and Contractor Global Roles in Central.
+* Configure at least one virtual network across site.
+* Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied.
+
+
