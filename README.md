@@ -147,6 +147,46 @@ To get sign-off on this duty, you need to complete the following:
 That's for the roles build, now on to the Fabric configuration!
 
 ### Lab Task 5 - Configure the Fabric
-* *In this task we will configure the device for the EVPN-VXLAN fabric. This will setup the VRF and BGP peering sessions.* 
+* *In this task we will configure the device for the EVPN-VXLAN fabric. This will setup the VRF and BGP peering sessions.*
+* *To simplify the configuration tasks, ACN groups the job of different devices required on the fabric into **'Personas'**. Rather than juggling the complex configurations per device type, you simply assign the **'Persona'** to the device.*
 * *In addition, because we are propagating the Client Roles via the fabric (Task 4.3 above), our role configuration will be pushed to the devices.*
 * *Note that the overlay and role actions will not be active as of yet though, that comes in the next task, when we configure the actual overlay networks and tenet subnets. 'Tenet' the term used in EVPN RFCs to describe the customer side networks I.E. not our fabric.*
+1. Navigate to the UI fabric group that you created, go **Manage - Devices -> Config**.
+2. You should see the ability to configure **Fabrics** in the **Routing** box. If not, check that the **MultiEdit** switch is grey out / off. 
+
+    ![task-5-1](/images/task5-1.png)
+
+3. Click the plus sign, top right, to add a new fabric.
+4. You're now in the **Create a New Fabric** workflow. There's only five panes in total, and we are going to skip one! Start by adding a fabric name, this can be a string of your choice.
+5. The BGP AS Number for the fabric is pre-populated with 65001. That works for our build, hit **Next**.
+
+> **The EVPN-VXLAN fabric we are building uses Internal BGP, the AS number provided is one of the assigned Private Autonomous System numbers. This is something akin to RFC 1918 private addressing for internal networks I.E. should never be seen on the public internet.**
+
+6. Now we are in the **Add Devices** pane. Here you should see all four of your devices. (Let your admin know if not). This is where you assign the Personas. We have two groups of devices, akin to spine group and a leaf group. You can tell which is which by the device **Names**.
+    
+    * The 6300s are the Edge devices.
+    * The 8325s are the **RR** (Route-reflector) and the **Border** personas.
+    * We do not have any AOS gateways in this lab, so no device has the **Stub** persona.
+
+7. Against each device check the correct persona to assign it. You'll see a helpful diagram appears, graphically explaining each persona.
+
+![personas](/images/personas.png)
+
+> Personas
+>   * Edge - The devices that sits at the boundary of the EVPN-VXLAN fabric. It is a VTEP - encapsulating and decapsulating VXLAN traffic. Our client roles are also enforced on its tenet-facing port (the port access config goes on those ports).
+>   * RR - The EVPN-VXLAN fabric is Internal BGP. BGP uses AS_PATH to prevent routing loops, but IBGP cannot rely on this because everything is happening in a single AS. Thus, IBGP uses a full-mesh of sessions to prevent loops. But, next problem, this doesn't scale well. Route-reflectors are used to allow greater scale, IBGP devices per to the RRs and the RR handling the relevant forwarding. RRs are the spines in our network!
+>  * Stub - Stub devices form the fabric connection between the EVPN-VXLAN fabric and devices that do not speak EVPN, namely AOS 10 gateways. Stubs extend the fabric segmentation functionality over static VXLAN tunnels, forming the bridge between wired and wireless Aruba fabrics.
+>   * Border - Border devices sit at the EVPN-VXLAN fabric edge, handing off to device external to the fabric.
+
+8. Next up is **Add Overlay Network**. The Overlay Networks here are the VRFs on the network. The VNI number is VXLAN ID number to identify the VRF traffic as it traverses the VXLAN fabric. Name the overlay network **Prod** and add in another, called **Dev**. These are our VRFs. Enter **10020** for the **Dev** VNI. Click **Next**
+   
+   >Note VRFs are only ever local to the device on which they are configured, once the traffic leaves the device (in the data plane) we need some form of ID to ensure the traffic from different VRFs stays separate on the wire. With VXLAN, the VNI is used.
+
+
+![vnis](/images/vnis.png)
+
+9. We do not have any **Stub** devices, so you can skip that.
+10. That's it! Now you're at the **Summary**. Click **Save**.
+11. You will return to the main fabric build pane. If you click **List** (top right), you will see that the devices are **Not in Sync** as ACN pushes the configuration to the device.
+12. Goto **Analyze -> Audit Trail** to see the audit of messages as the config is pushed to devices.
+13. It may take a few minutes for the config push to complete. Once it has, and the devices are in sync, it is time to move on to building the overlays proper!
