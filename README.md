@@ -64,9 +64,19 @@ To get sign-off on this duty, you need to complete the following:
 
 
 ### Lab Task 2 - Prepare the AOS-CX devices for Fabric Configuration
+*First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for tge Fabric config push.*
 1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
 2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
 3. Check to see that the switches all have a **Config Status** of **'In sync'**. If not, ask your admin to check them.
 
 
 ![Global](/images/task2-1-global.png)
+4. Create the new UI group. Go Global - Maintain - Organization -> Groups -> Add Group (click the plus sign top right).
+
+
+![step-four](/images/task2-2-1.png)
+![step-four](/images/task2-2-2.png)
+5. Give the group a name - something like 'tss-lab3' - '3' being the pod number, and check 'Switches'.
+![step-five](/images/task2-2-3.png)
+6. Set the type of group to AOS-CX only, click **Add**.
+![step-six](/images/task2-2-4.png)
