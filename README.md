@@ -136,7 +136,7 @@ To get sign-off on this duty, you need to complete the following:
 10. We only have one role at present, and we want Employees to speak to Employees, so check both boxes and hit **Assign**.
 
 
-     ![task-4-3](/images/task4-3.png)
+     ![task-4-3](/images/Task4-3.png)
 
 
 11. Repeat the process above for the Role 'Contractor'. But this time, DO NOT tick the **Allow default role to source role...** box.
