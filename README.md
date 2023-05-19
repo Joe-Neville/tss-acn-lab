@@ -100,10 +100,29 @@ To get sign-off on this duty, you need to complete the following:
 5. Select the destination group and ensure the 'Retain CX-Swtich configuration' box is checked, then click **Move**!
 
 
-    ![step-five](/images/task2-2-6.png)
+    ![step-five](/images/task2-2-6-1.png)
 
-    
-6. Head to your new UI group view and the device will transition from a **Config Status** of 'Not in sync' to 'In sync'.
+
+6. Head to your new UI group view, you should see that your devices have a **Config Status** of 'Not in sync'. That is to be expected after the device group move.
 
 
    ![step-six](/images/not-in-sync.png)
+
+7. Once the device move has completed, you should see a pop-up banner prompting you to set an Administrator password. Please set this to **Aruba123!**, we will need it to log into the device consoles directly later in the lab. (If you do set the password to something different, please make a note of it!)
+
+### Lab Task 4 - Configure the Global Roles
+*In this task we configure the Global Client Roles to be pushed to our fabric, these are the basis of our security policy.* 
+
+1. Navigate back to **Global -> Manage - Security -> Client Roles.
+2. Ensure that the **'Role-to-Role Policy Enforcement'** is set to the right.
+3. Also, check that the **'Use a switch fabric for role propagation?** radio button is set to **Yes**. We are creating the global Client Roles here, they will then be pushed to the devices when they are configured as part of a fabric later on.
+4. Click **Save** then hit the plus sign, top right to create a new role!
+
+   ![task-4-setup](/images/task4-1.png)
+
+5. You will see the 'Create a new role' pane.
+6. Create a role with the name 'Employee', give it a short description. The Policy Identifier is pre-populated with a suitable number, *100 by default*.
+7. Check the **Allow default role to source role...** box.
+8. Hit the pen icon in the Permission box on the right.
+
+      ![task-4-2-setup](/images/task4-2.png)
