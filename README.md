@@ -48,6 +48,22 @@ To get sign-off on this duty, you need to complete the following:
 * Deploy two VRFs - 'Prod' and 'Dev'
 * Configure and Deploy the Employee and Contractor Global Roles in Central.
 * Configure at least one virtual network across site.
-* Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied.
+* Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied. *depending on whether your friendly neighbourhood lab admin (me) can get the WinsAD/CPPM/cert to play nicely! 😅
+
+### Lab Task 1 - Get logged in
+1. There are five virtual network pods. Ask your admin for your pod number and login credentials.
+2. For each pod there is:
+    * An assigned workbench platform - Navigate to http://tssemea.arubademo.net - use the external_user username and password to login *(get this from Joe)* Note that the workbench ID does not match the pod number - because *reasons* 🤷‍♂️
+    * A dedicated Central user account - Navigater to https://common.cloud.hpe.com/ - use the dedicated workbench user and password *(ask Joe for deets)*
+3. Once you have gained access - have a look around but do not make any change just yet! Please do ensure that your workbench username and Central account matches the one assigned.
+
+* N.B. With the two platform you have the option to configure the devices either way, directly on the device or through Central - to emulate a Central-focused operational workflow, you should try to use Central as much as possible to configure the devices and this will be the primary approach.
+* However, for show commands, we will console in AOS-CX devices directly using the workbench console functionality. 
+* Ad-hoc config changes can be performed using Multi-edit.
 
 
+
+### Lab Task 2 - Prepare the AOS-CX devices for Fabric Configuration
+1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
+2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
+3. Check to see that the switches all have a **Config Status** of **'In sync'**. If not, ask your admin to check them.
