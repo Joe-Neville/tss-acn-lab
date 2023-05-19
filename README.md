@@ -127,4 +127,4 @@ To get sign-off on this duty, you need to complete the following:
 
       ![task-4-2-setup](/images/task4-2.png)
 
-> It is important to ensure you type the role names as shown. The role name string must match the string sent in the RADIUS VSA from ClearPass. In this lab, we use the role names 'Employee' and 'Contractor'.
+    > **It is important to ensure you type the role names as shown. The role name string must match the string sent in the RADIUS VSA from ClearPass. In this lab, we use the role names 'Employee' and 'Contractor'.**
