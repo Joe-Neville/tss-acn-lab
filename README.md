@@ -67,3 +67,4 @@ To get sign-off on this duty, you need to complete the following:
 1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
 2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
 3. Check to see that the switches all have a **Config Status** of **'In sync'**. If not, ask your admin to check them.
+![Alt text](../../Desktop/Screenshot%202023-05-19%20at%2014.25.17.png)
