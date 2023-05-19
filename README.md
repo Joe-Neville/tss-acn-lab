@@ -64,7 +64,10 @@ To get sign-off on this duty, you need to complete the following:
 
 
 ### Lab Task 2 - Verify the AOS-CX devices
-*First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for tge Fabric config push.*
+* *First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for tge Fabric config push.*
+* *The devices have already been configured to instantiate the necessary underlay configuration.*
+* *The underlay consists of point-to-point L3 links, loopbacks and OSPF.*
+* *The role of the underlay IGP is essentially just a transport for the EVPN-VXLAN device loopbacks. These loopbacks are the source and destination addresses for the VXLAN encapsulation and decapsulation AKA the overlay tunnel, which carry the customer traffic.*
 1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
 2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
 3. Check to see that the switches all have a **Config Status** of **'In sync'**. If not, ask your admin to check them.
@@ -128,3 +131,22 @@ To get sign-off on this duty, you need to complete the following:
       ![task-4-2-setup](/images/task4-2.png)
 
     > **It is important to ensure you type the role names as shown. The role name string must match the string sent in the RADIUS VSA from ClearPass. In this lab, we use the role names 'Employee' and 'Contractor'.**
+
+9. In the Assign Permissions pane, the permissions are built from the point of view of the role in question, this is the *source role*. The table is built to allow you to build combinations of permit and deny between the source role, and any active *Destination roles*, which are listed in the left-most column.
+10. We only have one role at present, and we want Employees to speak to Employees, so check both boxes and hit **Assign**.
+
+
+     ![task-4-3](/images/task4-3.png)
+
+
+11. Repeat the process above for the Role 'Contractor'. But this time, DO NOT tick the **Allow default role to source role...** box.
+12. With in the Assign Permissions pane, we only want the Contractors to be able to communicate with other Contractors, and not our Employees. Remember that the permissions are from the point of view of the role being configured, so the Permissions should look like this:
+
+     ![task-4-4](/images/task4-4.png)
+
+That's for the roles build, now on to the Fabric configuration!
+
+### Lab Task 5 - Configure the Fabric
+* *In this task we will configure the device for the EVPN-VXLAN fabric. This will setup the VRF and BGP peering sessions.* 
+* *In addition, because we are propagating the Client Roles via the fabric (Task 4.3 above), our role configuration will be pushed to the devices.*
+* *Note that the overlay and role actions will not be active as of yet though, that comes in the next task, when we configure the actual overlay networks and tenet subnets. 'Tenet' the term used in EVPN RFCs to describe the customer side networks I.E. not our fabric.*
