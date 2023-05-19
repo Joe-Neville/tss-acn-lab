@@ -63,7 +63,7 @@ To get sign-off on this duty, you need to complete the following:
 
 
 
-### Lab Task 2 - Prepare the AOS-CX devices for Fabric Configuration
+### Lab Task 2 - Verify the AOS-CX devices
 *First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for tge Fabric config push.*
 1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
 2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
@@ -71,12 +71,19 @@ To get sign-off on this duty, you need to complete the following:
 
 
 ![Global](/images/task2-1-global.png)
-4. Create the new UI group. Go Global - Maintain - Organization -> Groups -> Add Group (click the plus sign top right).
 
+### Lab Task 3 - Create and Populate the Fabric UI group
 
-![step-four](/images/task2-2-1.png)
-![step-four](/images/task2-2-2.png)
-5. Give the group a name - something like 'tss-lab3' - '3' being the pod number, and check 'Switches'.
-![step-five](/images/task2-2-3.png)
-6. Set the type of group to AOS-CX only, click **Add**.
-![step-six](/images/task2-2-4.png)
+1. Create the new UI group. Go ***Global - Maintain - Organization -> Groups -> Add Group*** (click the plus sign top right).
+    ![step-one](/images/task2-2-1.png)
+    ![step-one](/images/task2-2-2.png)
+2. Give the group a name - something like 'tss-lab3' - '3' being the pod number, and check **Switches**.
+    ![step-two](/images/task2-2-3.png)
+3. Set the type of group to AOS-CX only, click **Add**.
+    ![step-three](/images/task2-2-4.png)
+4. Now move all four devices to the newly created UI group - expand the default group by clicking the arrow on the left -> select each device by clicking on them -> Click the **Move Devices** icon.
+    ![step-four](/images/task2-2-5.png)
+5. Select the destination group and ensure the 'Retain CX-Swtich configuration' box is checked, then click **Move**!
+    ![step-five](/images/task2-2-6.png)
+6. Head to your new UI group view and the device will transition from a **Config Status** of 'Not in sync' to 'In sync'.
+   ![step-six](/images/not-in-sync.png)
