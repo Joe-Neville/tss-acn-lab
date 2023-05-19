@@ -142,7 +142,7 @@ To get sign-off on this duty, you need to complete the following:
 11. Repeat the process above for the Role 'Contractor'. But this time, DO NOT tick the **Allow default role to source role...** box.
 12. With in the Assign Permissions pane, we only want the Contractors to be able to communicate with other Contractors, and not our Employees. Remember that the permissions are from the point of view of the role being configured, so the Permissions should look like this:
 
-     ![task-4-4](/images/task4-4.png)
+     ![task-4-4](/images/Task4-4.png)
 
 That's for the roles build, now on to the Fabric configuration!
 
@@ -172,7 +172,7 @@ That's for the roles build, now on to the Fabric configuration!
 
 ![personas](/images/personas.png)
 
-> Personas
+> #### **Personas**
 >   * Edge - The devices that sits at the boundary of the EVPN-VXLAN fabric. It is a VTEP - encapsulating and decapsulating VXLAN traffic. Our client roles are also enforced on its tenet-facing port (the port access config goes on those ports).
 >   * RR - The EVPN-VXLAN fabric is Internal BGP. BGP uses AS_PATH to prevent routing loops, but IBGP cannot rely on this because everything is happening in a single AS. Thus, IBGP uses a full-mesh of sessions to prevent loops. But, next problem, this doesn't scale well. Route-reflectors are used to allow greater scale, IBGP devices per to the RRs and the RR handling the relevant forwarding. RRs are the spines in our network!
 >  * Stub - Stub devices form the fabric connection between the EVPN-VXLAN fabric and devices that do not speak EVPN, namely AOS 10 gateways. Stubs extend the fabric segmentation functionality over static VXLAN tunnels, forming the bridge between wired and wireless Aruba fabrics.
