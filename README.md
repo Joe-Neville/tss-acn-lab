@@ -21,6 +21,7 @@ There is also a shared ClearPass instance and a Windows 2019 server running Acti
 
 ### Lab Diagram
 
+![lab-diagram](/images/diagram.png)
 
 ### A word about scope of the lab and what to expect
 #### Scope
@@ -551,3 +552,79 @@ Total Number Of ARP Entries Listed: 1.
 
 ### Lab Task 9 - Let's test
 *To finish, log in another couple of users across the fabric and check the traffic flows*
+1. Log into your second 6300 and the attached Wins10 client.
+2. On the Windows box, run through the windows to the 802.1X Authentication dialogue box.
+3. This time, in the credentials, enter in another Employee: *yoda/admin12345!* (The password for all the users is the same).
+4. Check     `show port-access clients int 1/1/5` - you should see yoda logged in and assigned the **Employee** role. 
+5. Don't forget to check the EVPN table as well, you should see entries both locally learnt and remotely injected. You can check from either 6300:
+
+```
+6300-3-2# show bgp l2vpn evpn vni 10
+Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+              i internal, e external S Stale, R Removed, a additional-paths
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+EVPN Route-Type 2 prefix: [2]:[ESI]:[EthTag]:[MAC]:[OrigIP]
+EVPN Route-Type 3 prefix: [3]:[EthTag]:[OrigIP]
+EVPN Route-Type 5 prefix: [5]:[ESI]:[EthTag]:[IPAddrLen]:[IPAddr]
+VRF : default
+Local Router-ID 192.168.0.4
+
+     Network                                               Nexthop         Metric     LocPrf    Weight   Path
+------------------------------------------------------------------------------------------------------------
+Route Distinguisher: 192.168.1.3:10       (L2VNI 10)
+*>i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.3     0          100        0       ?
+* i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.3     0          100        0       ?
+*>i [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]         192.168.1.3     0          100        0       ?
+* i [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]         192.168.1.3     0          100        0       ?
+*>i [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[]                     192.168.1.3     0          100        0       ?
+* i [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[]                     192.168.1.3     0          100        0       ?
+*>i [3]:[0]:[192.168.1.3]                                  192.168.1.3     0          100        0       ?
+* i [3]:[0]:[192.168.1.3]                                  192.168.1.3     0          100        0       ?
+
+Route Distinguisher: 192.168.1.4:10       (L2VNI 10)
+*>  [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.4     0          100        0       ?
+*>  [2]:[0]:[0]:[00:e0:4c:36:20:d4]:[172.23.10.52]         192.168.1.4     0          100        0       ?
+*>  [2]:[0]:[0]:[00:e0:4c:36:20:d4]:[]                     192.168.1.4     0          100        0       ?
+*>  [3]:[0]:[192.168.1.4]                                  192.168.1.4     0          100        0       ?
+Total number of entries 12
+```
+
+In this capture, the ones with the `Next Hop` of 192.168.1.4 are locally injected, the ones from 192.168.1.3 are learnt via BGP.
+
+6. Open a command-line box on the Windows client connected to 6300-x-1 (6300A in the workbench topology)
+7. Check your local IP address with `ipconfig`.
+8. Try pinging the other user - if you are on 172.23.10.51, then ping 172.23.10.52.
+
+### Lab Task 10 - Let's test 2 - "Where are those transmissions you intercepted?"
+*Well done on making it this far into the lab! This is the final test - testing the policy enforcement by logging in a Contractor*
+1. Ensure that an Employee is logged into one of the Wins10 clients. For example - log Luke into the Wins10 client attached to 6300-x-1. The VMs IP address is 172.23.10.51.
+2. Go to the other Wins10 client, connected to 6300-x-2. Navigate to the Windows Authentication Dialogue again, in **Advanced settings -> Replace Credentials**. Log into with the Contractor user: *darth/admin12345!*
+
+    ![replace-creds](/images/task10-1.png)
+
+3. On the connected 6300 you should see that darth has been assigned the Contractor role:
+
+```
+6300-3-2# show port-access client int 1/1/5 
+
+Port Access Clients
+
+Status Codes: d device-mode, c client-mode, m multi-domain 
+
+--------------------------------------------------------------------------------------------------------
+  Port     MAC-Address       Onboarding     Status      Role                                Device Type 
+                             Method                                                                     
+--------------------------------------------------------------------------------------------------------
+c 1/1/5    00:e0:4c:36:20:d4 dot1x          Success     Contractor                          
+
+```
+4. Try to ping from Employee to Contractor (172.23.10.51 to 172.23.10.52) - this should fail - remember the Client Role permissions (Task 4)?
+5. Change the credentials again and log in yoda on 172.23.10.52 - the pings from Employee to Employee should work.
+
+> * Here we see the enforcement of the dynamic role assignment, based on the Client Role Permissions. No need for any port/VLAN ACLs anymore!
+> * In fact, the IP address nor the VLAN is relevant in the enforcement of segmentation (note that the source and destination VLANs and IP addresses remain the same - the key signifier is now the dynamically applied Client Role!)
+
+### End of Lab
+*Thanks for taking part in this ACN lab. This is the first iteration of this lab. We value your feedback as we attempt to refine and improve the lab user experience.*
+🧡
