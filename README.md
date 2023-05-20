@@ -241,3 +241,133 @@ That's for the roles build, now on to the Fabric configuration!
 
 
 ### Lab Task 7 - Verify the configuration
+*We are now going to log into the console of the devices & clients via workbench to run a number of verification commands.*
+
+1. Log into workbench at http://tssemea.arubademo.net/ (your admin has your credentials)
+2. Go to **View Topology**
+   
+    ![view-topology](/images/task7-1.png)
+
+
+3. You will now see your topology, it is essentially a spine-and-leaf, with a couple of conneced clients, and supporting infra.
+
+
+    ![topology](/images/task7-2.png)
+
+
+ 4. Right-click on one of the 6300 (go for 6300A - this is your 6300-x-1) and click **Console Access**
+
+
+    ![console-access](/images/task7-3.png)
+
+
+5. Log into the 6300 using the admin password you set earlier (that's why it was important to remember - default '*admin/Aruba123!*')
+
+6. Here's a few commands to verify the configuration:
+
+```
+6300-3-1# sh bgp l2vpn evpn summary 
+VRF : default
+BGP Summary
+-----------
+ Local AS               : 65001        BGP Router Identifier  : 192.168.0.3    
+ Peers                  : 2            Log Neighbor Changes   : No             
+ Cfg. Hold Time         : 180          Cfg. Keep Alive        : 60             
+ Confederation Id       : 0              
+
+ Neighbor        Remote-AS MsgRcvd MsgSent   Up/Down Time State        AdminStatus
+ 192.168.0.1     65001       1176    1169    16h:51m:37s  Established   Up         
+ 192.168.0.2     65001       1186    1173    16h:51m:37s  Established   Up         
+ ```
+
+* The Edge devices only peer with the RRs, hence why you only see two BGP sessions, check that their **State** is **Established**.
+
+
+```
+6300-3-1# show evpn evi 
+L2VNI : 10
+    Route Distinguisher        : 192.168.1.3:10
+    VLAN                       : 10
+    Status                     : up
+    RT Import                  : 65001:268435466
+    RT Export                  : 65001:268435466
+    Local MACs                 : 1
+    Remote MACs                : 1
+    Peer VTEPs                 : 1
+
+L3VNI : 10010
+    Route Distinguisher        : 192.168.0.3:10010
+    VRF                        : Prod
+    Status                     : up
+    RT Import                  : 65001:10010
+    RT Export                  : 65001:10010
+    Local Type-5 Routes        : 2
+    Remote Type-5 Routes       : 4
+    Peer VTEPs                 : 3
+
+L3VNI : 10020
+    Route Distinguisher        : 192.168.0.3:10020
+    VRF                        : Dev
+    Status                     : up                            
+    RT Import                  : 65001:10020
+    RT Export                  : 65001:10020
+    Local Type-5 Routes        : 1
+    Remote Type-5 Routes       : 3
+    Peer VTEPs                 : 3
+
+```
+* This shows us the EVPN Instance configuration.
+Here you can see the **segment** configuration, the L2VNI mapped to the customer-side VLAN 10. ACN uses the same ID for the VXLAN virtual network.
+* Essentially this tells us that if customer traffic is received tagged with VLAN 10, will be be encapsulated with VXLAN and the VXLAN VNI (the ID) of 10 as well.
+The two L3VNIs are created to support the two VRFs we created.
+
+> * In EVPN-VXLAN networks, the L2VNIs are mapped to the customer-side VLANs. They are the virtual networks that are the continuation of the customer-side broadcast domain into the VXLAN fabric. The L2VNIs can be configured on different VTEPs, to stretch the broadcast domain across the network (allowing the cusomter VLAN at multiple sites) or they can just be local to a single site.
+>  * The L3VNIs are more complex - ACN supports routing between customer-side networks using a feature called Symmetrical Integrated Routing and Bridging (IRB). The L3VNIs enable this IRB by providing a VRF-specific VNI that is shared by all the VTEPs in a single VRF. This allows these VTEPs to route between each other, without having to be configured with every L2VNI on the network. Yes, this is pretty complex stuf. Bottom line - you want to see a L3VNI for each VRF. 
+
+
+```
+6300-3-1# show run bgp
+router bgp 65001
+    bgp router-id 192.168.0.3
+    neighbor fabric_3 peer-group
+    neighbor fabric_3 remote-as 65001
+    neighbor fabric_3 fall-over
+    neighbor fabric_3 update-source loopback 0
+    neighbor 192.168.0.1 peer-group fabric_3
+    neighbor 192.168.0.2 peer-group fabric_3
+    address-family l2vpn evpn
+        neighbor 192.168.0.1 activate
+        neighbor 192.168.0.1 send-community extended
+        neighbor 192.168.0.2 activate
+        neighbor 192.168.0.2 send-community extended
+    exit-address-family
+!
+    vrf Dev
+        address-family ipv4 unicast
+            redistribute connected
+            redistribute local loopback
+        exit-address-family
+        address-family ipv6 unicast
+            redistribute connected
+        exit-address-family
+!                                                              
+    vrf Prod
+        address-family ipv4 unicast
+            redistribute connected
+            redistribute local loopback
+        exit-address-family
+        address-family ipv6 unicast
+            redistribute connected
+        exit-address-family
+        
+```
+* Here you can see the full BGP configuration. We usew a peer-group for the RRs - note L2VPN EVPN address-family, and VRF-specific unicast AFs.
+
+
+### Lab Task 8 - Generate client traffic and verify the RTs
+*Let's generate some traffic from the clients.*
+
+1. Back on the workbench topology, log into the *Windows Wired Client* connected to 6300A (right-click & hit **Console Access** - this will log you in using the default 'Aruba' user account)
+2. Hit **Start** and type **cmd** or **powershell**, if that's your thing!
+3. Eth0 is the mgmt interface **DO NOT TOUCH THAT**, we are going to work with the other interfacem, should be **Eth2**.
+4. Hit Start, type **Control Panel -> Network and Internet -> Network and Sharing Center -> Change adapter settings**
