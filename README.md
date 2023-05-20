@@ -190,3 +190,31 @@ That's for the roles build, now on to the Fabric configuration!
 11. You will return to the main fabric build pane. If you click **List** (top right), you will see that the devices are **Not in Sync** as ACN pushes the configuration to the device.
 12. Goto **Analyze -> Audit Trail** to see the audit of messages as the config is pushed to devices.
 13. It may take a few minutes for the config push to complete. Once it has, and the devices are in sync, it is time to move on to building the overlays proper!
+
+### Lab Task 6 - Configure the Overlays
+* *The fabric configured so far is more the core residing portion of the overlay, now with we configure the virtual networks that map to the customer-side VLANs. In VXLAN terms, these are the L2VNI; ACN calls them 'segments'.*
+* *Against these segments we configure the customer VLAN, the active default gateway and any DHCP configuration.*
+* *It is on these segments that we apply the clients roles that we wish to be active on them.*
+* *Yes, segments are important!*
+
+1. With all the devices *In Sync*, go back to the Fabric configuration page **Manage - Devices -> Routing - Fabrics -> Hover over your fabric and the small 'Create Segment' icon will appear.** It looks like a couple of computers on a LAN.
+2. Click the **Create Segment** and you will see the **New Segment** pane. Start by clicking the arrow next to 'Overlay Network'. You will see your overlay networks. Select one to build the segment against.
+
+    ![segment](/images/task6-1.png)
+
+3. Now you need to enter the VLAN Name and VLAN ID, note that this is the tenet(customer) side VLAN. By creating a segment you are mapping the customer-side VLAN to a fabric-side VXLAN Virtual network (a VNI). The enter a name of your choosing, the VLAN ID doesn't really matter but 10 is a good one!
+4. The next line is the default gateway configuration. This is the configuration of the L3 VLAN interface that sits on the Edge device. 
+
+> **EVPN utilises an anycast default gateway model, so the same virtual MAC and IP address can be configured on all Edge devices. This enables VM migration, their MAC & ARP tables entries for the default gateway are valid if they move between gateways, no need to ARP again!**
+
+5. Here's the IP addressing that you should use for your gateway.
+
+    | Pod        | Default Gateway IP|
+    | ----------|-------------:|
+    |    1      | 172.21.10.254 | 
+    |    2      | 172.22.10.254 |
+    |    3      | 172.23.10.254 | 
+    |    4      | 172.24.10.254 |
+    |    5      | 172.25.10.254 |
+
+6. The section at the bottom of the page is for DHCP Relay, this enables the customer-side devices to pick up IP addresses from a centralized DHCP server. This is particularly important within EVPN-VXLAN networks, because the DHCP server has to return the OFFER linked to the correct VRF. For this lab, at the time of writing, the admin hasn't configured this, so we just skip it, the connect customer-side Windows clients are statically configured. 
