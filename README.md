@@ -35,20 +35,22 @@ There is also a shared ClearPass instance and a Windows 2019 server running Acti
 
 ## Lab
 ### Scenario
-Congratulations - your hardwork, dedication and general grindset mentality has earned you the prized 'employee of the month' award at TSSlab Corp. 
-In recognition of your success, you've been asked to head up the all-important new campus network build using Aruba's new Enterprise Architecture platform, NetConductor (we'll call it ACN from now on.)
-Your task is to deploy a new network fabric on a AOS-CX switching spine-and-leaf underlay.
-The aim of the network build is to support both the Production and Development networks, keeping them separate across the shared fabric core.
-In addition, TSSlab Corp has had some outages recently. Cause: The ACLs across the network have never been tidied up and even small changes are creating big issues. The C-suite have noticed and are asking questions (like 'can we replace the networking team with chatGPT?')
-You and your network team are going solve this headache and have decided to use this greenfield site as your chance to improve things, to move beyond the ageing ACL / VLAN security model, and deploy dynamic role-based segmentation!
-The new build is the perfect opportunity because, while the site is up for Employees, who must communicate, there are a number of contractors on-site, who should be kept apart from the Employee data. Rather than carve up the network in new VLANs for the temporary contractors, you plan to use a Contractor role and deny traffic to your Employee users, all enabled dynamically at user log in.
+ **Congratulations 🥳** - your hardwork, dedication and general grindset mentality has earned you the prized *'employee of the month'* award at TSSlab Corp (like Weyland-Utani Corporation but with better gym membership perks). 
+
+* In recognition of your success, you've been asked to head up the all-important new campus network build using Aruba's new Enterprise Architecture platform, NetConductor (we'll call it ACN from now on.)
+* Your task is to deploy a new network fabric on a AOS-CX switching spine-and-leaf underlay.
+* The aim of the network build is to support both the Production and Development networks, keeping them separate across the shared fabric core.
+* In addition, TSSlab Corp has had some outages recently. Cause: The ACLs across the network have never been tidied up and even small changes are creating big issues. The C-suite have noticed and are asking questions (like 'can we replace the networking team with chatGPT?')
+* You and your network team are going solve this headache and have decided to use this greenfield site as your chance to improve things, to move beyond the ageing ACL / VLAN security model, and deploy dynamic role-based segmentation!
+* The new build is the perfect opportunity because, while the site is up for Employees, who must communicate, there are a number of contractors on-site, who should be kept apart from the Employee data. Rather than carve up the network in new VLANs for the temporary contractors, you plan to use a Contractor role and deny traffic to your Employee users, all enabled dynamically at user log in.
 
 To get sign-off on this duty, you need to complete the following:
-* Build the EVPN-VXLAN fabric.
-* Deploy two VRFs - 'Prod' and 'Dev'
-* Configure and Deploy the Employee and Contractor Global Roles in Central.
-* Configure at least one virtual network across site.
-* Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied. *depending on whether your friendly neighbourhood lab admin (me) can get the WinsAD/CPPM/cert to play nicely! 😅
+    
+    * Build the EVPN-VXLAN fabric.
+    * Deploy two VRFs - 'Prod' and 'Dev'
+    * Configure and Deploy the Employee and Contractor Global Roles in Central.
+    * Configure at least one virtual network across site.
+    * Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied. (depending on whether your friendly neighbourhood lab admin (me) can get the WinsAD/CPPM/cert to play nicely!)
 
 ### Lab Task 1 - Get logged in
 1. There are five virtual network pods. Ask your admin for your pod number and login credentials.
@@ -217,4 +219,25 @@ That's for the roles build, now on to the Fabric configuration!
     |    4      | 172.24.10.254 |
     |    5      | 172.25.10.254 |
 
+
+    ![segment-config](/images/task6-2.png)
+
+
 6. The section at the bottom of the page is for DHCP Relay, this enables the customer-side devices to pick up IP addresses from a centralized DHCP server. This is particularly important within EVPN-VXLAN networks, because the DHCP server has to return the OFFER linked to the correct VRF. For this lab, at the time of writing, the admin hasn't configured this, so we just skip it, the connect customer-side Windows clients are statically configured. 
+
+7. Next we add our Client Roles to the Segment. Check both role boxes then hit 'Next'.
+   
+
+    ![roles-config](/images/task6-3.png)
+
+
+>**In ACN terminology, an EVPN-VXLAN fabric is called 'Distributed'. That is because the role enforcement happens on the traffic's egress from the Edge device. This is a *Distributed* enforcement model - rather than Centralized.**
+
+8. Now, for the final piece of configuration, we apply the 'segment' to the Edge devices. Check the box for both 6300s and hit 'Next'. Take a moment to admire the summary of your toil....then smash that 'Save' to kick off the configuration process.
+
+    ![edge-config](/images/task6-4.png)
+
+9. Same rules apply, you'll see the 6300 devices go 'Not in sync', you can view the config push in the **Analyze - Audit Trail**
+
+
+### Lab Task 7 - Verify the configuration
