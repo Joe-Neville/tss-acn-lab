@@ -370,4 +370,184 @@ router bgp 65001
 1. Back on the workbench topology, log into the *Windows Wired Client* connected to 6300A (right-click & hit **Console Access** - this will log you in using the default 'Aruba' user account)
 2. Hit **Start** and type **cmd** or **powershell**, if that's your thing!
 3. Eth0 is the mgmt interface **DO NOT TOUCH THAT**, we are going to work with the other interfacem, should be **Eth2**.
-4. Hit Start, type **Control Panel -> Network and Internet -> Network and Sharing Center -> Change adapter settings**
+4. Hit Start, type **Control Panel -> Network and Internet -> Network and Sharing Center -> Change adapter settings -> *Right-click* Ethernet 2 -> Properties**
+5. You should now have the Ethernet 2 Properties box. (Make sure you are not on Eth0 or you will cut yourself off!). **Enable IIIE 802.1X authentication** should be ticked and the authentication method set to PEAP.
+6. Click **Authentication -> Additional Settings**
+
+    ![eth2](/images/eth2-properties.png)
+
+7. Ensure that the settings are set to **User authentication** Hit the box next to it, which will say something like *Replace credentials*
+
+    ![additional](/images/additional.png)
+
+8. Enter the authentication credentials of one of the Employees:
+    luke/admin12345!
+9. *Ok* through the boxes back to the 'Network Connections' box. Windows will now fire off the 802.1X authentication process using Luke's credentials.
+10. Jump back onto your 6300-x-1 device (6300A in the Workbench topology) and enter:
+    
+    `show port-access clients int 1/1/5`
+
+Now you will be able to see the details of the employee, then VLAN dynamically assigned, and the VXLAN-GBP policy applied:
+
+```
+6300-3-1# show port-access clients int 1/1/5 detail 
+
+Port Access Client Status Details:
+
+Client a0:ce:c8:1d:5b:6b, TSSLAB\luke
+=====================================
+  Session Details
+  ---------------
+    Port         : 1/1/5
+    Session Time : 98015s
+    IPv4 Address : 
+    IPv6 Address : 
+    Device Type  : 
+
+  VLAN Details
+  ------------
+    VLAN Group Name : 
+    VLANs Assigned  : 10
+      Access          : 10
+      Native Untagged : 
+      Allowed Trunk   : 
+
+  Authentication Details
+  ----------------------
+    Status          : dot1x Authenticated                      
+    Auth Precedence : dot1x - Authenticated, mac-auth - Not attempted
+    Auth History    : dot1x - Authenticated, 794s ago
+                      dot1x - Authenticated, 7824s ago
+                      dot1x - Unauthenticated, Server-Reject, 7842s ago
+                      dot1x - Unauthenticated, Server-Reject, 8130s ago
+                      dot1x - Unauthenticated, Server-Timeout, 8263s ago
+
+  Authorization Details
+  ----------------------
+    Role   : Employee
+    Status : Applied
+
+
+Role Information:
+
+Name  : Employee
+Type  : local
+----------------------------------------------
+    Reauthentication Period             : 
+    Cached Reauthentication Period      : 
+    Authentication Mode                 : 
+    Session Timeout                     : 
+    Client Inactivity Timeout           :                      
+    Description                         : 
+    Gateway Zone                        : 
+    UBT Gateway Role                    : 
+    UBT Gateway Clearpass Role          : 
+    Access VLAN                         : 
+    Native VLAN                         : 
+    Allowed Trunk VLANs                 : 
+    Access VLAN Name                    : Corp-access
+    Native VLAN Name                    : 
+    Allowed Trunk VLAN Names            : 
+    VLAN Group Name                     : 
+    MTU                                 : 
+    QOS Trust Mode                      : 
+    STP Administrative Edge Port        : 
+    PoE Priority                        : 
+    PVLAN Port Type                     : 
+    Captive Portal Profile              : 
+    Policy                              : 
+    GBP                                 : Employee_r2r_policy
+    Device Type                         : 
+
+
+Access GBP Details:                                            
+
+GBP Name   : Employee_r2r_policy
+GBP Type   : Local
+GBP Status : Applied
+
+SEQUENCE    CLASS                            TYPE     ACTION
+----------- -------------------------------- -------- -----------------------
+10          Employee_ALLOW                   gbp-ipv4 permit   
+20          Employee_ALLOW                   gbp-ipv6 permit   
+30          Employee_ALLOW                   gbp-mac  permit   
+
+
+Class Details:
+
+class gbp-ip Employee_ALLOW
+    1 match any Employee Employee
+class gbp-ipv6 Employee_ALLOW
+    1 match any Employee Employee
+class gbp-mac Employee_ALLOW
+    1 match Employee Employee any
+ 
+```
+
+11. Now that the client is deemed to be sending traffic in VLAN 10, the 6300 will record the client's source MAC in its EVPN table, to be advertised to EVPN peers as a Route-Type 2. Verify this by entering the following:
+
+    `show bgp l2vpn evpn vni 10`
+
+```
+6300-3-1# show bgp l2vpn evpn vni 10
+Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+              i internal, e external S Stale, R Removed, a additional-paths
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+EVPN Route-Type 2 prefix: [2]:[ESI]:[EthTag]:[MAC]:[OrigIP]
+EVPN Route-Type 3 prefix: [3]:[EthTag]:[OrigIP]
+EVPN Route-Type 5 prefix: [5]:[ESI]:[EthTag]:[IPAddrLen]:[IPAddr]
+VRF : default
+Local Router-ID 192.168.0.3
+
+     Network                                               Nexthop         Metric     LocPrf    Weight   Path
+------------------------------------------------------------------------------------------------------------
+Route Distinguisher: 192.168.1.3:10       (L2VNI 10)
+*>  [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.3     0          100        0       ?
+*>  [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]         192.168.1.3     0          100        0       ?
+*>  [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[]                     192.168.1.3     0          100        0       ?
+*>  [3]:[0]:[192.168.1.3]                                  192.168.1.3     0          100        0       ?
+
+Route Distinguisher: 192.168.1.4:10       (L2VNI 10)
+*>i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.4     0          100        0       ?
+* i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.4     0          100        0       ?
+*>i [3]:[0]:[192.168.1.4]                                  192.168.1.4     0          100        0       ?
+* i [3]:[0]:[192.168.1.4]                                  192.168.1.4     0          100        0       ?
+Total number of entries 8                                      
+
+```
+
+In the above example, the Wins10 client is this entry:
+```
+[2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]
+```
+* The leading [2] tells us this is a Route-Type 2 - the BGP UPDATE used to share MAC/IP reachability information
+* You can also see the MAC address of the client and the IP address
+
+12. If this is a little unfamiliar, the information actually just comes from the MAC and ARP tables. You can see this information there:
+
+```
+6300-3-1# show mac-address-table 
+MAC age-time            : 300 seconds
+Number of MAC addresses : 1
+
+MAC Address          VLAN     Type                      Port      
+--------------------------------------------------------------
+a0:ce:c8:1d:5b:6b    10       port-access-security      1/1/5      
+6300-3-1# 
+6300-3-1# 
+6300-3-1# 
+6300-3-1# show arp vrf Prod 
+
+IPv4 Address     MAC                Port         Physical Port              State      VRF                             
+-------------------------------------------------------------------------------------------------------------------
+172.23.10.51     a0:ce:c8:1d:5b:6b  vlan10       1/1/5                      reachable  Prod                             
+
+Total Number Of ARP Entries Listed: 1.
+-------------------------------------------------------------------------------------------------------------------
+6300-3-1# 
+
+```
+
+### Lab Task 9 - Let's test
+*To finish, log in another couple of users across the fabric and check the traffic flows*
