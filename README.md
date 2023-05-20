@@ -35,20 +35,22 @@ There is also a shared ClearPass instance and a Windows 2019 server running Acti
 
 ## Lab
 ### Scenario
-Congratulations - your hardwork, dedication and general grindset mentality has earned you the prized 'employee of the month' award at TSSlab Corp. 
-In recognition of your success, you've been asked to head up the all-important new campus network build using Aruba's new Enterprise Architecture platform, NetConductor (we'll call it ACN from now on.)
-Your task is to deploy a new network fabric on a AOS-CX switching spine-and-leaf underlay.
-The aim of the network build is to support both the Production and Development networks, keeping them separate across the shared fabric core.
-In addition, TSSlab Corp has had some outages recently. Cause: The ACLs across the network have never been tidied up and even small changes are creating big issues. The C-suite have noticed and are asking questions (like 'can we replace the networking team with chatGPT?')
-You and your network team are going solve this headache and have decided to use this greenfield site as your chance to improve things, to move beyond the ageing ACL / VLAN security model, and deploy dynamic role-based segmentation!
-The new build is the perfect opportunity because, while the site is up for Employees, who must communicate, there are a number of contractors on-site, who should be kept apart from the Employee data. Rather than carve up the network in new VLANs for the temporary contractors, you plan to use a Contractor role and deny traffic to your Employee users, all enabled dynamically at user log in.
+ **Congratulations 🥳** - your hardwork, dedication and general grindset mentality has earned you the prized *'employee of the month'* award at TSSlab Corp (like Weyland-Utani Corporation but with better gym membership perks). 
+
+* In recognition of your success, you've been asked to head up the all-important new campus network build using Aruba's new Enterprise Architecture platform, NetConductor (we'll call it ACN from now on.)
+* Your task is to deploy a new network fabric on a AOS-CX switching spine-and-leaf underlay.
+* The aim of the network build is to support both the Production and Development networks, keeping them separate across the shared fabric core.
+* In addition, TSSlab Corp has had some outages recently. Cause: The ACLs across the network have never been tidied up and even small changes are creating big issues. The C-suite have noticed and are asking questions (like 'can we replace the networking team with chatGPT?')
+* You and your network team are going solve this headache and have decided to use this greenfield site as your chance to improve things, to move beyond the ageing ACL / VLAN security model, and deploy dynamic role-based segmentation!
+* The new build is the perfect opportunity because, while the site is up for Employees, who must communicate, there are a number of contractors on-site, who should be kept apart from the Employee data. Rather than carve up the network in new VLANs for the temporary contractors, you plan to use a Contractor role and deny traffic to your Employee users, all enabled dynamically at user log in.
 
 To get sign-off on this duty, you need to complete the following:
-* Build the EVPN-VXLAN fabric.
-* Deploy two VRFs - 'Prod' and 'Dev'
-* Configure and Deploy the Employee and Contractor Global Roles in Central.
-* Configure at least one virtual network across site.
-* Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied. *depending on whether your friendly neighbourhood lab admin (me) can get the WinsAD/CPPM/cert to play nicely! 😅
+    
+    * Build the EVPN-VXLAN fabric.
+    * Deploy two VRFs - 'Prod' and 'Dev'
+    * Configure and Deploy the Employee and Contractor Global Roles in Central.
+    * Configure at least one virtual network across site.
+    * Prove Employee to Employee East-West traffic flows are permitted, while Contractor-Employee flows are denied. (depending on whether your friendly neighbourhood lab admin (me) can get the WinsAD/CPPM/cert to play nicely!)
 
 ### Lab Task 1 - Get logged in
 1. There are five virtual network pods. Ask your admin for your pod number and login credentials.
@@ -217,4 +219,335 @@ That's for the roles build, now on to the Fabric configuration!
     |    4      | 172.24.10.254 |
     |    5      | 172.25.10.254 |
 
+
+    ![segment-config](/images/task6-2.png)
+
+
 6. The section at the bottom of the page is for DHCP Relay, this enables the customer-side devices to pick up IP addresses from a centralized DHCP server. This is particularly important within EVPN-VXLAN networks, because the DHCP server has to return the OFFER linked to the correct VRF. For this lab, at the time of writing, the admin hasn't configured this, so we just skip it, the connect customer-side Windows clients are statically configured. 
+
+7. Next we add our Client Roles to the Segment. Check both role boxes then hit 'Next'.
+   
+
+    ![roles-config](/images/task6-3.png)
+
+
+>**In ACN terminology, an EVPN-VXLAN fabric is called 'Distributed'. That is because the role enforcement happens on the traffic's egress from the Edge device. This is a *Distributed* enforcement model - rather than Centralized.**
+
+8. Now, for the final piece of configuration, we apply the 'segment' to the Edge devices. Check the box for both 6300s and hit 'Next'. Take a moment to admire the summary of your toil....then smash that 'Save' to kick off the configuration process.
+
+    ![edge-config](/images/task6-4.png)
+
+9. Same rules apply, you'll see the 6300 devices go 'Not in sync', you can view the config push in the **Analyze - Audit Trail**
+
+
+### Lab Task 7 - Verify the configuration
+*We are now going to log into the console of the devices & clients via workbench to run a number of verification commands.*
+
+1. Log into workbench at http://tssemea.arubademo.net/ (your admin has your credentials)
+2. Go to **View Topology**
+   
+    ![view-topology](/images/task7-1.png)
+
+
+3. You will now see your topology, it is essentially a spine-and-leaf, with a couple of conneced clients, and supporting infra.
+
+
+    ![topology](/images/task7-2.png)
+
+
+ 4. Right-click on one of the 6300 (go for 6300A - this is your 6300-x-1) and click **Console Access**
+
+
+    ![console-access](/images/task7-3.png)
+
+
+5. Log into the 6300 using the admin password you set earlier (that's why it was important to remember - default '*admin/Aruba123!*')
+
+6. Here's a few commands to verify the configuration:
+
+```
+6300-3-1# sh bgp l2vpn evpn summary 
+VRF : default
+BGP Summary
+-----------
+ Local AS               : 65001        BGP Router Identifier  : 192.168.0.3    
+ Peers                  : 2            Log Neighbor Changes   : No             
+ Cfg. Hold Time         : 180          Cfg. Keep Alive        : 60             
+ Confederation Id       : 0              
+
+ Neighbor        Remote-AS MsgRcvd MsgSent   Up/Down Time State        AdminStatus
+ 192.168.0.1     65001       1176    1169    16h:51m:37s  Established   Up         
+ 192.168.0.2     65001       1186    1173    16h:51m:37s  Established   Up         
+ ```
+
+* The Edge devices only peer with the RRs, hence why you only see two BGP sessions, check that their **State** is **Established**.
+
+
+```
+6300-3-1# show evpn evi 
+L2VNI : 10
+    Route Distinguisher        : 192.168.1.3:10
+    VLAN                       : 10
+    Status                     : up
+    RT Import                  : 65001:268435466
+    RT Export                  : 65001:268435466
+    Local MACs                 : 1
+    Remote MACs                : 1
+    Peer VTEPs                 : 1
+
+L3VNI : 10010
+    Route Distinguisher        : 192.168.0.3:10010
+    VRF                        : Prod
+    Status                     : up
+    RT Import                  : 65001:10010
+    RT Export                  : 65001:10010
+    Local Type-5 Routes        : 2
+    Remote Type-5 Routes       : 4
+    Peer VTEPs                 : 3
+
+L3VNI : 10020
+    Route Distinguisher        : 192.168.0.3:10020
+    VRF                        : Dev
+    Status                     : up                            
+    RT Import                  : 65001:10020
+    RT Export                  : 65001:10020
+    Local Type-5 Routes        : 1
+    Remote Type-5 Routes       : 3
+    Peer VTEPs                 : 3
+
+```
+* This shows us the EVPN Instance configuration.
+Here you can see the **segment** configuration, the L2VNI mapped to the customer-side VLAN 10. ACN uses the same ID for the VXLAN virtual network.
+* Essentially this tells us that if customer traffic is received tagged with VLAN 10, will be be encapsulated with VXLAN and the VXLAN VNI (the ID) of 10 as well.
+The two L3VNIs are created to support the two VRFs we created.
+
+> * In EVPN-VXLAN networks, the L2VNIs are mapped to the customer-side VLANs. They are the virtual networks that are the continuation of the customer-side broadcast domain into the VXLAN fabric. The L2VNIs can be configured on different VTEPs, to stretch the broadcast domain across the network (allowing the cusomter VLAN at multiple sites) or they can just be local to a single site.
+>  * The L3VNIs are more complex - ACN supports routing between customer-side networks using a feature called Symmetrical Integrated Routing and Bridging (IRB). The L3VNIs enable this IRB by providing a VRF-specific VNI that is shared by all the VTEPs in a single VRF. This allows these VTEPs to route between each other, without having to be configured with every L2VNI on the network. Yes, this is pretty complex stuf. Bottom line - you want to see a L3VNI for each VRF. 
+
+
+```
+6300-3-1# show run bgp
+router bgp 65001
+    bgp router-id 192.168.0.3
+    neighbor fabric_3 peer-group
+    neighbor fabric_3 remote-as 65001
+    neighbor fabric_3 fall-over
+    neighbor fabric_3 update-source loopback 0
+    neighbor 192.168.0.1 peer-group fabric_3
+    neighbor 192.168.0.2 peer-group fabric_3
+    address-family l2vpn evpn
+        neighbor 192.168.0.1 activate
+        neighbor 192.168.0.1 send-community extended
+        neighbor 192.168.0.2 activate
+        neighbor 192.168.0.2 send-community extended
+    exit-address-family
+!
+    vrf Dev
+        address-family ipv4 unicast
+            redistribute connected
+            redistribute local loopback
+        exit-address-family
+        address-family ipv6 unicast
+            redistribute connected
+        exit-address-family
+!                                                              
+    vrf Prod
+        address-family ipv4 unicast
+            redistribute connected
+            redistribute local loopback
+        exit-address-family
+        address-family ipv6 unicast
+            redistribute connected
+        exit-address-family
+        
+```
+* Here you can see the full BGP configuration. We usew a peer-group for the RRs - note L2VPN EVPN address-family, and VRF-specific unicast AFs.
+
+
+### Lab Task 8 - Generate client traffic and verify the RTs
+*Let's generate some traffic from the clients.*
+
+1. Back on the workbench topology, log into the *Windows Wired Client* connected to 6300A (right-click & hit **Console Access** - this will log you in using the default 'Aruba' user account)
+2. Hit **Start** and type **cmd** or **powershell**, if that's your thing!
+3. Eth0 is the mgmt interface **DO NOT TOUCH THAT**, we are going to work with the other interfacem, should be **Eth2**.
+4. Hit Start, type **Control Panel -> Network and Internet -> Network and Sharing Center -> Change adapter settings -> *Right-click* Ethernet 2 -> Properties**
+5. You should now have the Ethernet 2 Properties box. (Make sure you are not on Eth0 or you will cut yourself off!). **Enable IIIE 802.1X authentication** should be ticked and the authentication method set to PEAP.
+6. Click **Authentication -> Additional Settings**
+
+    ![eth2](/images/eth2-properties.png)
+
+7. Ensure that the settings are set to **User authentication** Hit the box next to it, which will say something like *Replace credentials*
+
+    ![additional](/images/additional.png)
+
+8. Enter the authentication credentials of one of the Employees:
+    luke/admin12345!
+9. *Ok* through the boxes back to the 'Network Connections' box. Windows will now fire off the 802.1X authentication process using Luke's credentials.
+10. Jump back onto your 6300-x-1 device (6300A in the Workbench topology) and enter:
+    
+    `show port-access clients int 1/1/5`
+
+Now you will be able to see the details of the employee, then VLAN dynamically assigned, and the VXLAN-GBP policy applied:
+
+```
+6300-3-1# show port-access clients int 1/1/5 detail 
+
+Port Access Client Status Details:
+
+Client a0:ce:c8:1d:5b:6b, TSSLAB\luke
+=====================================
+  Session Details
+  ---------------
+    Port         : 1/1/5
+    Session Time : 98015s
+    IPv4 Address : 
+    IPv6 Address : 
+    Device Type  : 
+
+  VLAN Details
+  ------------
+    VLAN Group Name : 
+    VLANs Assigned  : 10
+      Access          : 10
+      Native Untagged : 
+      Allowed Trunk   : 
+
+  Authentication Details
+  ----------------------
+    Status          : dot1x Authenticated                      
+    Auth Precedence : dot1x - Authenticated, mac-auth - Not attempted
+    Auth History    : dot1x - Authenticated, 794s ago
+                      dot1x - Authenticated, 7824s ago
+                      dot1x - Unauthenticated, Server-Reject, 7842s ago
+                      dot1x - Unauthenticated, Server-Reject, 8130s ago
+                      dot1x - Unauthenticated, Server-Timeout, 8263s ago
+
+  Authorization Details
+  ----------------------
+    Role   : Employee
+    Status : Applied
+
+
+Role Information:
+
+Name  : Employee
+Type  : local
+----------------------------------------------
+    Reauthentication Period             : 
+    Cached Reauthentication Period      : 
+    Authentication Mode                 : 
+    Session Timeout                     : 
+    Client Inactivity Timeout           :                      
+    Description                         : 
+    Gateway Zone                        : 
+    UBT Gateway Role                    : 
+    UBT Gateway Clearpass Role          : 
+    Access VLAN                         : 
+    Native VLAN                         : 
+    Allowed Trunk VLANs                 : 
+    Access VLAN Name                    : Corp-access
+    Native VLAN Name                    : 
+    Allowed Trunk VLAN Names            : 
+    VLAN Group Name                     : 
+    MTU                                 : 
+    QOS Trust Mode                      : 
+    STP Administrative Edge Port        : 
+    PoE Priority                        : 
+    PVLAN Port Type                     : 
+    Captive Portal Profile              : 
+    Policy                              : 
+    GBP                                 : Employee_r2r_policy
+    Device Type                         : 
+
+
+Access GBP Details:                                            
+
+GBP Name   : Employee_r2r_policy
+GBP Type   : Local
+GBP Status : Applied
+
+SEQUENCE    CLASS                            TYPE     ACTION
+----------- -------------------------------- -------- -----------------------
+10          Employee_ALLOW                   gbp-ipv4 permit   
+20          Employee_ALLOW                   gbp-ipv6 permit   
+30          Employee_ALLOW                   gbp-mac  permit   
+
+
+Class Details:
+
+class gbp-ip Employee_ALLOW
+    1 match any Employee Employee
+class gbp-ipv6 Employee_ALLOW
+    1 match any Employee Employee
+class gbp-mac Employee_ALLOW
+    1 match Employee Employee any
+ 
+```
+
+11. Now that the client is deemed to be sending traffic in VLAN 10, the 6300 will record the client's source MAC in its EVPN table, to be advertised to EVPN peers as a Route-Type 2. Verify this by entering the following:
+
+    `show bgp l2vpn evpn vni 10`
+
+```
+6300-3-1# show bgp l2vpn evpn vni 10
+Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+              i internal, e external S Stale, R Removed, a additional-paths
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+EVPN Route-Type 2 prefix: [2]:[ESI]:[EthTag]:[MAC]:[OrigIP]
+EVPN Route-Type 3 prefix: [3]:[EthTag]:[OrigIP]
+EVPN Route-Type 5 prefix: [5]:[ESI]:[EthTag]:[IPAddrLen]:[IPAddr]
+VRF : default
+Local Router-ID 192.168.0.3
+
+     Network                                               Nexthop         Metric     LocPrf    Weight   Path
+------------------------------------------------------------------------------------------------------------
+Route Distinguisher: 192.168.1.3:10       (L2VNI 10)
+*>  [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.3     0          100        0       ?
+*>  [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]         192.168.1.3     0          100        0       ?
+*>  [2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[]                     192.168.1.3     0          100        0       ?
+*>  [3]:[0]:[192.168.1.3]                                  192.168.1.3     0          100        0       ?
+
+Route Distinguisher: 192.168.1.4:10       (L2VNI 10)
+*>i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.4     0          100        0       ?
+* i [2]:[0]:[0]:[00:00:00:00:00:01]:[172.23.10.254]        192.168.1.4     0          100        0       ?
+*>i [3]:[0]:[192.168.1.4]                                  192.168.1.4     0          100        0       ?
+* i [3]:[0]:[192.168.1.4]                                  192.168.1.4     0          100        0       ?
+Total number of entries 8                                      
+
+```
+
+In the above example, the Wins10 client is this entry:
+```
+[2]:[0]:[0]:[a0:ce:c8:1d:5b:6b]:[172.23.10.51]
+```
+* The leading [2] tells us this is a Route-Type 2 - the BGP UPDATE used to share MAC/IP reachability information
+* You can also see the MAC address of the client and the IP address
+
+12. If this is a little unfamiliar, the information actually just comes from the MAC and ARP tables. You can see this information there:
+
+```
+6300-3-1# show mac-address-table 
+MAC age-time            : 300 seconds
+Number of MAC addresses : 1
+
+MAC Address          VLAN     Type                      Port      
+--------------------------------------------------------------
+a0:ce:c8:1d:5b:6b    10       port-access-security      1/1/5      
+6300-3-1# 
+6300-3-1# 
+6300-3-1# 
+6300-3-1# show arp vrf Prod 
+
+IPv4 Address     MAC                Port         Physical Port              State      VRF                             
+-------------------------------------------------------------------------------------------------------------------
+172.23.10.51     a0:ce:c8:1d:5b:6b  vlan10       1/1/5                      reachable  Prod                             
+
+Total Number Of ARP Entries Listed: 1.
+-------------------------------------------------------------------------------------------------------------------
+6300-3-1# 
+
+```
+
+### Lab Task 9 - Let's test
+*To finish, log in another couple of users across the fabric and check the traffic flows*
