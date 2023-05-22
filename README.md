@@ -3,7 +3,6 @@
 :wave: **Welcome to the Deploying Distributed Fabrics TSS lab.**
 * In this lab you will use Aruba Central NetConductor to build and configure your own network fabric running EVPN-VXLAN for reachability and micro-segmentation. Then put the configuration to the test with the new Central 'Global Roles' functionality.
 * You have access to dedicated hardware running in our 'workbench' facility, and your own, tailor-made, Aruba Central account.
-* Plus there is a Windows Active Directory Domain and ClearPass up and running to enable you to test user 802.1X AuthN and role assignment.
 * Don't worry if this is your first time with Aruba Central or EVPN-VXLAN - this guide will step you through the process.
 
 ### Lab Setup
@@ -14,8 +13,8 @@ Ok so what toys do you have to play with then?
 2. An Aruba Central Account
 3. 2 x Wins 10 clients - to emulate user login/802.1X
    
-All of the above is dedicated to your own lab 'pod'.
-There is also a shared ClearPass instance and a Windows 2019 server running Active Directory. These have already been configured for you and are shared amongst the whole lab so:
+* All of the above is dedicated to your own lab 'pod'.
+* There is also a shared ClearPass instance and a Windows 2019 server running Active Directory. These have already been configured for you and are shared amongst the whole lab so:
 
 **Please do not reconfigure the CPPM or Windows 2019 server - everyone needs to share those resources.**
 
@@ -57,7 +56,7 @@ To get sign-off on this duty, you need to complete the following:
 1. There are five virtual network pods. Ask your admin for your pod number and login credentials.
 2. For each pod there is:
     * An assigned workbench platform - Navigate to http://tssemea.arubademo.net - use the external_user username and password to login *(get this from Joe)* Note that the workbench ID does not match the pod number - because *reasons* 🤷‍♂️
-    * A dedicated Central user account - Navigater to https://common.cloud.hpe.com/ - use the dedicated workbench user and password *(ask Joe for deets)*
+    * A dedicated Central user account - Navigate to https://common.cloud.hpe.com/ - use the dedicated workbench user and password *(ask Joe for details)*
 3. Once you have gained access - have a look around but do not make any change just yet! Please do ensure that your workbench username and Central account matches the one assigned.
 
 * N.B. With the two platform you have the option to configure the devices either way, directly on the device or through Central - to emulate a Central-focused operational workflow, you should try to use Central as much as possible to configure the devices and this will be the primary approach.
@@ -67,11 +66,11 @@ To get sign-off on this duty, you need to complete the following:
 
 
 ### Lab Task 2 - Verify the AOS-CX devices
-* *First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for tge Fabric config push.*
+* *First we need to ensure the devices are reset and ready in the 'Global' group, then move them into a new UI group for the Fabric config push.*
 * *The devices have already been configured to instantiate the necessary underlay configuration.*
 * *The underlay consists of point-to-point L3 links, loopbacks and OSPF.*
 * *The role of the underlay IGP is essentially just a transport for the EVPN-VXLAN device loopbacks. These loopbacks are the source and destination addresses for the VXLAN encapsulation and decapsulation AKA the overlay tunnel, which carry the customer traffic.*
-1. View the default group for your Central account. Right after log nativate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
+1. View the default group for your Central account. Right after log naviagate to **Applications -> My Applications - Aruba Central -> Deployment Regions - Aruba Central US West - Launch**
 2. You should now be on the Aruba Central Front Page. Under the **Manage** banner on the left side, click on **Devices**, then click on **Switches** to show your AOS-CX ready to be deployed as a fabric.
 3. Check to see that the switches all have a **Config Status** of **'In sync'**. If not, ask your admin to check them.
 
@@ -135,8 +134,8 @@ To get sign-off on this duty, you need to complete the following:
 
     > **It is important to ensure you type the role names as shown. The role name string must match the string sent in the RADIUS VSA from ClearPass. In this lab, we use the role names 'Employee' and 'Contractor'.**
 
-9. In the Assign Permissions pane, the permissions are built from the point of view of the role in question, this is the *source role*. The table is built to allow you to build combinations of permit and deny between the source role, and any active *Destination roles*, which are listed in the left-most column.
-10. We only have one role at present, and we want Employees to speak to Employees, so check both boxes and hit **Assign**.
+9. In the *Assign Permissions* pane, the permissions are built from the point of view of the role in question, this is the *source role*. The table is built to allow you to build combinations of permit and deny between the source role, and any active *Destination roles*, which are listed in the left-most column.
+10. We only have one role at present, and we want Employee to speak to Employee, so check both boxes and hit **Assign**.
 
 
      ![task-4-3](/images/Task4-3.png)
@@ -176,7 +175,7 @@ That's for the roles build, now on to the Fabric configuration!
 ![personas](/images/personas.png)
 
 > #### **Personas**
->   * Edge - The devices that sits at the boundary of the EVPN-VXLAN fabric. It is a VTEP - encapsulating and decapsulating VXLAN traffic. Our client roles are also enforced on its tenet-facing port (the port access config goes on those ports).
+>   * Edge - The device that sits at the boundary of the EVPN-VXLAN fabric. It is a VTEP - encapsulating and decapsulating VXLAN traffic. Our client roles are also enforced on its tenet-facing port (the port access config goes on those ports).
 >   * RR - The EVPN-VXLAN fabric is Internal BGP. BGP uses AS_PATH to prevent routing loops, but IBGP cannot rely on this because everything is happening in a single AS. Thus, IBGP uses a full-mesh of sessions to prevent loops. But, next problem, this doesn't scale well. Route-reflectors are used to allow greater scale, IBGP devices per to the RRs and the RR handling the relevant forwarding. RRs are the spines in our network!
 >  * Stub - Stub devices form the fabric connection between the EVPN-VXLAN fabric and devices that do not speak EVPN, namely AOS 10 gateways. Stubs extend the fabric segmentation functionality over static VXLAN tunnels, forming the bridge between wired and wireless Aruba fabrics.
 >   * Border - Border devices sit at the EVPN-VXLAN fabric edge, handing off to device external to the fabric.
@@ -205,7 +204,7 @@ That's for the roles build, now on to the Fabric configuration!
 
     ![segment](/images/task6-1.png)
 
-3. Now you need to enter the VLAN Name and VLAN ID, note that this is the tenet(customer) side VLAN. By creating a segment you are mapping the customer-side VLAN to a fabric-side VXLAN Virtual network (a VNI). The enter a name of your choosing, the VLAN ID doesn't really matter but 10 is a good one!
+3. Now you need to enter the VLAN Name and VLAN ID, note that this is the customer side VLAN. By creating a segment you are mapping the customer-side VLAN to a fabric-side VXLAN Virtual network (a VNI). The enter a name of your choosing, the VLAN ID doesn't really matter but 10 is a good one! AKA Use 10, thanks.
 4. The next line is the default gateway configuration. This is the configuration of the L3 VLAN interface that sits on the Edge device. 
 
 > **EVPN utilises an anycast default gateway model, so the same virtual MAC and IP address can be configured on all Edge devices. This enables VM migration, their MAC & ARP tables entries for the default gateway are valid if they move between gateways, no need to ARP again!**
@@ -370,7 +369,7 @@ router bgp 65001
 
 1. Back on the workbench topology, log into the *Windows Wired Client* connected to 6300A (right-click & hit **Console Access** - this will log you in using the default 'Aruba' user account)
 2. Hit **Start** and type **cmd** or **powershell**, if that's your thing!
-3. Eth0 is the mgmt interface **DO NOT TOUCH THAT**, we are going to work with the other interfacem, should be **Eth2**.
+3. Eth0 is the mgmt interface **DO NOT TOUCH THAT**, we are going to work with the other interface, this should be **Eth2**.
 4. Hit Start, type **Control Panel -> Network and Internet -> Network and Sharing Center -> Change adapter settings -> *Right-click* Ethernet 2 -> Properties**
 5. You should now have the Ethernet 2 Properties box. (Make sure you are not on Eth0 or you will cut yourself off!). **Enable IIIE 802.1X authentication** should be ticked and the authentication method set to PEAP.
 6. Click **Authentication -> Additional Settings**
@@ -590,7 +589,7 @@ Route Distinguisher: 192.168.1.4:10       (L2VNI 10)
 Total number of entries 12
 ```
 
-In this capture, the ones with the `Next Hop` of 192.168.1.4 are locally injected, the ones from 192.168.1.3 are learnt via BGP.
+In this capture, the ones with the `Next Hop` of 192.168.1.4 are locally injected, the ones from 192.168.1.3 are learnt via EVPN.
 
 6. Open a command-line box on the Windows client connected to 6300-x-1 (6300A in the workbench topology)
 7. Check your local IP address with `ipconfig`.
@@ -598,7 +597,7 @@ In this capture, the ones with the `Next Hop` of 192.168.1.4 are locally injecte
 
 ### Lab Task 10 - Let's test 2 - "Where are those transmissions you intercepted?"
 *Well done on making it this far into the lab! This is the final test - testing the policy enforcement by logging in a Contractor*
-1. Ensure that an Employee is logged into one of the Wins10 clients. For example - log Luke into the Wins10 client attached to 6300-x-1. The VMs IP address is 172.23.10.51.
+1. Ensure that an Employee is logged into one of the Wins10 clients. For example - log Luke into the Wins10 client attached to 6300-x-1. The VMs IP address is 172.2x.10.51.
 2. Go to the other Wins10 client, connected to 6300-x-2. Navigate to the Windows Authentication Dialogue again, in **Advanced settings -> Replace Credentials**. Log into with the Contractor user: *darth/admin12345!*
 
     ![replace-creds](/images/task10-1.png)
@@ -619,8 +618,8 @@ Status Codes: d device-mode, c client-mode, m multi-domain
 c 1/1/5    00:e0:4c:36:20:d4 dot1x          Success     Contractor                          
 
 ```
-4. Try to ping from Employee to Contractor (172.23.10.51 to 172.23.10.52) - this should fail - remember the Client Role permissions (Task 4)?
-5. Change the credentials again and log in yoda on 172.23.10.52 - the pings from Employee to Employee should work.
+4. Try to ping from Employee to Contractor (172.2x.10.51 to 172.2x.10.52) - this should fail - remember the Client Role permissions (Task 4)?
+5. Change the credentials again and log in yoda on 172.2x.10.52 - the pings from Employee to Employee should work.
 
 > * Here we see the enforcement of the dynamic role assignment, based on the Client Role Permissions. No need for any port/VLAN ACLs anymore!
 > * In fact, the IP address nor the VLAN is relevant in the enforcement of segmentation (note that the source and destination VLANs and IP addresses remain the same - the key signifier is now the dynamically applied Client Role!)
