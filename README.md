@@ -20,7 +20,7 @@ Ok so what toys do you have to play with then?
 
 ### Lab Diagram
 
-![lab-diagram](/images/diagram.png)
+![lab-diagram](/images/diagram2.png)
 
 ### A word about scope of the lab and what to expect
 #### Scope
